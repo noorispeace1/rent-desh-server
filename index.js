@@ -34,7 +34,8 @@ async function run() {
 const database = client.db("rent_desh_db");
 const propertyCollection = database.collection("property");
 const favoritesCollection = database.collection("favorites");
-const userCollection = database.collection("user")
+const userCollection = database.collection("user");
+const bookingsCollection = database.collection("bookings");
 app.post('/property', async (req, res) => {
   try {
     const propertyData = req.body;
@@ -214,6 +215,20 @@ app.delete('/properties/:id', async (req, res) => {
   } catch (error) {
     console.error("Error deleting property:", error);
     res.status(500).send({ error: "Failed to delete property" });
+  }
+});
+
+// Create a new booking
+app.post('/bookings', async (req, res) => {
+  try {
+    const bookingData = req.body;
+    bookingData.createdAt = new Date().toISOString();
+    bookingData.status = "PENDING";
+    const result = await bookingsCollection.insertOne(bookingData);
+    res.status(201).send({ success: true, result });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).send({ error: "Failed to create booking" });
   }
 });
 
