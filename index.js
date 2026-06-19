@@ -114,7 +114,7 @@ app.post('/property', verifyToken, async (req, res) => {
   }
 });
 
-app.get('/properties', async (req, res) => {
+app.get('/properties', verifyToken, async (req, res) => {
   try {
     const cursor = propertyCollection.find();
     const result = await cursor.toArray();
@@ -123,6 +123,33 @@ app.get('/properties', async (req, res) => {
     console.error("Error fetching properties:", error);
     res.status(500).send({ error: "Failed to fetch properties" });
   }
+});
+
+app.get('/properties/public', async (req, res) => {
+  try {
+    const cursor = propertyCollection.find();
+    const result = await cursor.toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching public properties:", error);
+    res.status(500).send({ error: "Failed to fetch public properties" });
+  }
+});
+
+app.get('/properties/owner/:email', async (req, res) => {
+  try {
+    const ownerEmail = req.params.email;
+    const cursor = propertyCollection.find({ ownerEmail });
+    const result = await cursor.toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching owner properties:", error);
+    res.status(500).send({ error: "Failed to fetch owner properties" });
+  }
+});
+
+app.all('/propertise', (req, res) => {
+  res.status(400).send({ error: true, message: "setup mf" });
 });
 
 app.get('/property/:id', async (req, res) => {
