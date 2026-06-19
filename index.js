@@ -1,15 +1,37 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const app = express()
-const port = 5000
+const port = process.env.PORT || 5000
 require('dotenv').config()
 app.use(cors())
 app.use(express.json())
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
+// Verify Token Middleware
+const verifyToken = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({ error: true, message: 'access not available' });
+  }
+  const token = authorization.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || 'rentdesh_secret_key_2026', (err, decoded) => {
+    if (err) {
+      return res.status(403).send({ error: true, message: 'access not available' });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
+})
+
+app.get('/dashboard', verifyToken, (req, res) => {
+  res.send({ message: "Dashboard accessed successfully!", user: req.decoded });
 })
 
 
@@ -36,7 +58,52 @@ const propertyCollection = database.collection("property");
 const favoritesCollection = database.collection("favorites");
 const userCollection = database.collection("user");
 const bookingsCollection = database.collection("bookings");
-app.post('/property', async (req, res) => {
+const reviewsCollection = database.collection("reviews");
+
+// Submit a review
+app.post('/reviews', async (req, res) => {
+  try {
+    const reviewData = req.body;
+    reviewData.createdAt = new Date().toISOString();
+    const result = await reviewsCollection.insertOne(reviewData);
+    res.status(201).send({ success: true, result });
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    res.status(500).send({ error: "Failed to submit review" });
+  }
+});
+
+// Fetch reviews by tenant email
+app.get('/reviews/tenant/:email', async (req, res) => {
+  try {
+    const email = req.params.email;
+    const result = await reviewsCollection.find({ email }).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching tenant reviews:", error);
+    res.status(500).send({ error: "Failed to fetch tenant reviews" });
+  }
+});
+
+// Fetch all reviews for homepage
+app.get('/reviews', async (req, res) => {
+  try {
+    const result = await reviewsCollection.find().sort({ createdAt: -1 }).limit(10).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching all reviews:", error);
+    res.status(500).send({ error: "Failed to fetch all reviews" });
+  }
+});
+
+// Generate JWT Token
+app.post('/jwt', async (req, res) => {
+  const user = req.body;
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET || 'rentdesh_secret_key_2026', { expiresIn: '10h' });
+  res.send({ token });
+});
+
+app.post('/property', verifyToken, async (req, res) => {
   try {
     const propertyData = req.body;
     const result = await propertyCollection.insertOne(propertyData);
