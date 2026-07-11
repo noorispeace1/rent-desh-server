@@ -1,10 +1,22 @@
 {
+  "scripts": {
+    "start": "node api.js && tsx index.ts",
+    "dev": "node api.js && tsx watch index.ts"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.3.0",
-    "nodemon": "^3.1.14"
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.0",
+    "typescript": "^7.0.2"
   }
 }
